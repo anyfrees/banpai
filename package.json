@@ -1,0 +1,138 @@
+{
+  "name": "banpai-client",
+  "productName": "电子班牌发送客户端",
+  "version": "1.0.1",
+  "description": "用于向电子班牌发送图片的桌面客户端程序",
+  "main": "main.js",
+  "author": {
+    "name": "Cheng Kai",
+    "email": "i@chengkai.vip",
+    "url": "https://www.0vk.com"
+  },
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "electron",
+    "image",
+    "sender",
+    "tcp",
+    "banpai"
+  ],
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^29.1.5",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.0vk.www",
+    "productName": "电子班牌发送客户端",
+    "copyright": "Copyright © 2024 Cheng Kai",
+    "asar": true,
+    "directories": {
+      "output": "dist_electron",
+      "buildResources": "build_resources"
+    },
+    "files": [
+      "**/*",
+      "!*.{py,pyc,md,log,pdb,sln,vcxproj,user,filters,gitignore,gitattributes,vscode,idea}",
+      "!dist_electron/",
+      "!release/",
+      "!build_resources/",
+      "!screenshots/",
+      "!notes/",
+      "!src_python/",
+      "!*.zip",
+      "!*.tar.gz"
+    ],
+    "extraResources": [
+      {
+        "from": "./assets/",
+        "to": "assets",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "publisherName": "Cheng Kai",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.utilities",
+      "darkModeSupport": true
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm",
+        "tar.gz"
+      ],
+      "icon": "assets/icon.png",
+      "category": "Utility",
+      "desktop": {
+        "Name": "电子班牌发送客户端",
+        "Comment": "用于向电子班牌发送图片的桌面客户端程序",
+        "Keywords": "image;sender;banpai;"
+      }
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "电子班牌发送客户端",
+      "uninstallDisplayName": "${productName} (版本 ${version})",
+      "license": "LICENSE.txt"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    }
+  }
+}

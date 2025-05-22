@@ -1,6 +1,6 @@
 
 
-![](https://p.0vk.com/p/682ea0f0c197b.webp)
+![](https://bing.0vk.com/p/682ea0f0c197b.webp)
 ### 目标设备列表管理
 #### 加载列表
 - 程序启动时自动从本地路径 **用户数据目录下的 ImageSenderData/computers.json** 加载已保存的设备列表，**保留列表顺序**。

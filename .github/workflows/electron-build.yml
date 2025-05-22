@@ -1,67 +1,63 @@
-name: Build 班牌客户端 App
+name: Build banpai App
 
 on:
   push:
     tags: # 仅当推送新的标签时触发 (例如 v1.0.0, v1.0.1)
       - 'v*' # 匹配所有以 'v' 开头的标签
+  workflow_dispatch: # 允许手动触发
 
 jobs:
   build:
-    name: Build for ${{ matrix.os }}
+    name: Build for ${{ matrix.os }} on Node ${{ matrix.node_version }}
     runs-on: ${{ matrix.os }} # 在不同的操作系统上运行构建任务
 
     strategy:
       matrix: # 定义构建矩阵
-        os: [macos-latest, ubuntu-latest, windows-latest] # 构建的目标操作系统
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        node_version: ['18.x'] # 您可以指定多个Node.js版本，如果需要的话
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 # 检出仓库代码
+        uses: actions/checkout@v4 # 更新到 v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js ${{ matrix.node_version }}
+        uses: actions/setup-node@v4 # 更新到 v4
         with:
-          node-version: '18' # 或者您项目使用的 Node.js 版本
+          node-version: ${{ matrix.node_version }}
+          cache: 'npm' # 缓存npm依赖，加快后续构建
 
       - name: Install dependencies (npm)
-        run: npm install
-        # 如果您使用 yarn，替换为:
-        # run: yarn install --frozen-lockfile
+        run: npm ci # 使用 npm ci 更快且更可靠地安装依赖
 
       - name: Install app dependencies for electron-builder
         run: npm run postinstall # 运行 package.json 中的 postinstall 脚本
-        # 如果您使用 yarn，并且 postinstall 脚本是 yarn electron-builder install-app-deps
-        # run: yarn postinstall 
 
-      # macOS 构建特定步骤 (如果需要代码签名)
+      # macOS 构建特定步骤 (如果需要代码签名和公证)
       # - name: Import Code-Signing Certificates (macOS)
-      #   if: matrix.os == 'macos-latest' && secrets.MAC_CERTS_P12_BASE64 != ''
-      #   uses: apple-actions/import-codesign-certs@v2
+      #   if: matrix.os == 'macos-latest' && secrets.MAC_CERTS_P12_BASE64 != '' && secrets.MAC_CERTS_PASSWORD != ''
+      #   uses: apple-actions/import-codesign-certs@v2 # 这个 action 的最新版本可能也需要检查
       #   with:
       #     p12-file-base64: ${{ secrets.MAC_CERTS_P12_BASE64 }}
       #     p12-password: ${{ secrets.MAC_CERTS_PASSWORD }}
 
       - name: Build/release Electron app
-        # 使用 electron-builder 构建并发布
-        # CSC_LINK 和 CSC_KEY_PASSWORD 用于 macOS 代码签名 (如果配置了)
-        # WIN_CSC_LINK 和 WIN_CSC_KEY_PASSWORD 用于 Windows 代码签名 (如果配置了)
-        # GH_TOKEN 用于将构建产物上传到 GitHub Releases
-        run: npm run dist # 这会运行 package.json 中的 "dist": "electron-builder"
+        run: npm run dist 
         env:
-          # 下面的 secrets 需要在 GitHub 仓库的 Settings > Secrets and variables > Actions 中配置
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub 自动提供的 token，用于创建 release 和上传附件
-          # CSC_LINK: ${{ secrets.MAC_CERTS_P12_BASE64 }} # macOS 代码签名证书 (Base64编码的 .p12 文件)
-          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }} # macOS 证书密码
-          # WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }} # Windows 代码签名证书 (例如，Base64编码的 .pfx 文件或链接)
-          # WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }} # Windows 证书密码
-          # APPLE_ID: ${{ secrets.APPLE_ID }} # 用于 macOS 公证
-          # APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }} # 用于 macOS 公证
-          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} # 用于 macOS 公证
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          # --- macOS Codesigning and Notarization ---
+          # CSC_LINK: ${{ secrets.MAC_CERTS_P12_BASE64 }} 
+          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }} 
+          # APPLE_ID: ${{ secrets.APPLE_ID }} 
+          # APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }} 
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
+          # --- Windows Codesigning ---
+          # WIN_CSC_LINK: ${{ secrets.WIN_PFX_FILE_BASE64 }} 
+          # WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_PFX_PASSWORD }} 
 
-      - name: Upload Artifacts (Optional, if not creating a release directly)
-        if: failure() == false # 仅在构建成功时上传
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifacts
+        if: success() # 仅在构建成功时上传
+        uses: actions/upload-artifact@v4 # 更新到 v4
         with:
-          name: ${{ matrix.os }}-build-${{ github.ref_name }} # 例如 macos-build-v1.0.1
+          name: ${{ matrix.os }}-build-${{ github.ref_name }} 
           path: dist_electron/ # 与 package.json 中的 directories.output 一致
-          # retention-days: 7 # 可选：设置产物的保留天数
+          # retention-days: 7 

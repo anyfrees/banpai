@@ -665,8 +665,9 @@ async function handleImportComputers() {
 
                 if (tempNewComputers.length > 0) {
                     computers = computers.concat(tempNewComputers); 
-                    await saveComputersList();
-                    await probeAllComputersStatus(); 
+                    await saveComputersList(); // 保存合并后的列表
+                    // 在保存后，重新加载并探测状态，以确保UI与持久化数据一致
+                    await loadAndDisplayComputers(true); // 这会调用 displayComputerList 和 probeAllComputersStatus
                 }
                 let message = `成功导入 ${importedCount} 条新计算机信息。`;
                 if (skippedCount > 0) message += ` 跳过 ${skippedCount} 条无效或重复记录。`;

@@ -1,37 +1,43 @@
-/* style.css - 明亮仪表盘风格 - 添加关于按钮样式 */
+/* style.css - 明亮仪表盘风格 - 更新标题栏应用图标样式 */
 :root {
     --primary-font: 'Roboto', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
     --secondary-font: 'Roboto', sans-serif; 
 
-    --bg-color: #f4f7fc; 
+    /* 颜色方案调整：更柔和、专业的现代色调 */
+    --bg-color: #f8f9fa; /* 更中性的浅灰背景 */
     --card-bg-color: #ffffff; 
-    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
-    --card-border-radius: 12px; 
+    --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.07); /* 略微调整阴影 */
+    --card-border-radius: 10px; /* 统一圆角 */
 
-    --text-primary: #333740; 
-    --text-secondary: #777e8c; 
-    --text-light: #a0a8b7;   
+    --text-primary: #2c3e50; /* 主要文本 - 深蓝灰色 */
+    --text-secondary: #7f8c8d; /* 次要文本 - 中灰色 */
+    --text-light: #95a5a6;   /* 更浅的文本 */
 
-    --accent-color-primary: #6a5acd; 
-    --accent-color-secondary: #3b82f6; 
-    --accent-color-success: #10b981; 
-    --accent-color-error: #ef4444;   
-    --accent-color-warning: #f59e0b; 
-    --status-pending-color: #777e8c; 
+    /* 强调色调整 - 采用更协调的蓝色系作为主调，搭配其他功能色 */
+    --accent-color-primary: #3498db; /* 主强调色 - 清爽蓝 */
+    --accent-color-primary-darker: #2980b9;
+    --accent-color-secondary: #2ecc71; /* 次强调色/成功色 - 清爽绿 */
+    --accent-color-secondary-darker: #27ae60;
+
+    --accent-color-success: var(--accent-color-secondary); /* 成功色与次强调色统一 */
+    --accent-color-error: #e74c3c;   /* 错误 - 红色 */
+    --accent-color-warning: #f39c12; /* 警告 - 橙色 */
+    --accent-color-info: #3498db;    /* 信息 - 与主强调色统一 */
+    --status-pending-color: #777e8c; /* 灰色 - 未知/探测中 (新增) */
 
 
-    --border-color: #e5e9f2; 
+    --border-color: #e0e6ed; /* 边框和分隔线颜色 */
 
     --button-primary-bg: var(--accent-color-primary);
-    --button-primary-hover-bg: #5847b3;
+    --button-primary-hover-bg: var(--accent-color-primary-darker);
     --button-secondary-bg: var(--accent-color-secondary);
-    --button-secondary-hover-bg: #2563eb;
+    --button-secondary-hover-bg: var(--accent-color-secondary-darker);
     --button-text-light: #ffffff;
     --button-danger-bg: var(--accent-color-error);
-    --button-danger-hover-bg: #d73737;
+    --button-danger-hover-bg: #c0392b;
 
 
-    --transition-main: 0.25s ease-in-out;
+    --transition-main: 0.2s ease-in-out; /* 统一过渡时间 */
 }
 
 html {
@@ -56,13 +62,12 @@ body {
 .container {
     background-color: var(--card-bg-color);
     border-radius: 0; 
-    box-shadow: var(--card-shadow);
+    box-shadow: 0 0 25px rgba(0,0,0,0.05); 
     overflow: hidden;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--border-color);
     box-sizing: border-box;
 }
 
@@ -70,7 +75,7 @@ body {
 .title-bar {
     background-color: #ffffff;
     padding: 0 15px;
-    height: 50px;
+    height: 48px; 
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -81,8 +86,8 @@ body {
 }
 
 .title-bar-text {
-    font-size: 1.1em;
-    font-weight: 600;
+    font-size: 1.05em; 
+    font-weight: 500; 
     color: var(--text-primary);
     display: flex;
     align-items: center;
@@ -94,12 +99,19 @@ body {
     white-space: nowrap; 
     margin-right: 10px; 
 }
-.app-icon {
-    margin-right: 10px;
-    font-size: 1.3em;
-    color: var(--accent-color-primary);
+/* 修改应用图标样式，针对 <img> 标签 */
+.app-icon-img { /* 原来的 .app-icon 是针对 <i> 标签的 */
+    width: 22px;  /* 设置合适的宽度 */
+    height: 22px; /* 设置合适的高度 */
+    margin-right: 8px; /* 调整与文字的间距 */
+    object-fit: contain; /* 确保图片完整显示并保持比例 */
     flex-shrink: 0; 
+    vertical-align: middle; /* 尝试垂直居中图片与文字 */
 }
+.title-bar-text span { /* 确保标题文本与图片垂直居中 */
+    vertical-align: middle;
+}
+
 
 .title-bar-controls {
     -webkit-app-region: no-drag;
@@ -110,19 +122,21 @@ body {
 .window-control-btn {
     background: transparent;
     border: none;
-    color: var(--text-light);
-    font-size: 0.9em;
-    padding: 0 12px;
-    height: 50px;
-    line-height: 50px;
+    color: #95a5a6; 
+    font-size: 0.85em; 
+    padding: 0 10px; 
+    height: 48px;
+    line-height: 48px;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
 }
 .window-control-btn:hover {
-    color: var(--text-secondary);
+    color: var(--text-primary);
+    background-color: #ecf0f1; 
 }
 .window-control-btn.close-btn-hover:hover {
-    color: var(--accent-color-error);
+    color: var(--button-text-light);
+    background-color: var(--accent-color-error);
 }
 
 /* --- 主内容区域 --- */
@@ -164,7 +178,7 @@ body {
     margin-bottom: 0; 
     display: flex;
     align-items: center;
-    font-size: 1.15em;
+    font-size: 1.1em; 
     font-weight: 600;
     border-bottom: none; 
     padding-bottom: 0; 
@@ -191,20 +205,20 @@ body {
     margin-bottom: 15px;
     display: flex;
     align-items: center;
-    font-size: 1.15em;
+    font-size: 1.1em; 
     font-weight: 600;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 12px;
+    padding-bottom: 10px; 
     flex-shrink: 0;
 }
 .sidebar-subtitle {
-    font-size: 1.05em;
+    font-size: 1em; 
     margin-top: auto; 
     padding-top: 15px;
 }
 .sidebar-title i, .sidebar-subtitle i, .content-title i {
-    margin-right: 10px;
-    font-size: 1.2em;
+    margin-right: 8px; 
+    font-size: 1.1em; 
     color: var(--accent-color-primary);
 }
 
@@ -212,7 +226,6 @@ body {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    /* gap: 20px; 移除，因为现在只有一个主要子元素 image-selection-section */
     overflow: hidden; 
 }
 
@@ -220,41 +233,49 @@ body {
     transition: box-shadow var(--transition-main), transform var(--transition-main);
 }
 .interactive-panel:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); 
 }
 .section-description {
-    font-size: 0.9em;
+    font-size: 0.875em; 
     color: var(--text-secondary);
     margin-bottom: 15px; 
-    line-height: 1.6;
+    line-height: 1.5;
     flex-shrink: 0;
 }
 
-/* 新增：列表管理按钮容器样式 */
+/* 列表管理按钮容器样式 */
 .list-management-buttons {
     display: flex;
-    gap: 10px; 
+    gap: 8px; 
     margin-bottom: 15px; 
     flex-shrink: 0;
 }
 
 .button.list-action-button { 
     flex-grow: 1; 
-    padding: 8px 10px; 
-    font-size: 0.85em; 
+    padding: 7px 10px; 
+    font-size: 0.8em; 
+    border: 1px solid var(--border-color); 
+    background-color: #f8f9fa; 
+    color: var(--text-secondary);
+}
+.button.list-action-button:hover {
+    background-color: #e9ecef;
+    border-color: #d1d5db;
 }
 .button.list-action-button i {
-    font-size: 1em; 
-    margin-right: 6px;
+    font-size: 0.9em; 
+    margin-right: 5px;
 }
 
 .button.danger-button { 
     background-color: var(--button-danger-bg);
     color: var(--button-text-light);
+    border-color: var(--button-danger-bg); 
 }
 .button.danger-button:not(:disabled):hover {
     background-color: var(--button-danger-hover-bg);
+    border-color: var(--button-danger-hover-bg);
 }
 
 
@@ -274,10 +295,10 @@ body {
 }
 
 .ip-card {
-    background-color: #f9fafb;
+    background-color: var(--card-bg-color); 
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 8px 10px; 
+    border-radius: 6px; 
+    padding: 10px 12px; 
     margin-bottom: 8px; 
     cursor: pointer;
     transition: all var(--transition-main);
@@ -287,13 +308,13 @@ body {
 }
 .ip-card:hover {
     border-color: var(--accent-color-primary);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 3px 8px rgba(106, 90, 205, 0.1); 
 }
-.ip-card.selected { 
+.ip-card.selected {
     background-color: var(--accent-color-primary);
     color: var(--button-text-light);
     border-color: var(--accent-color-primary);
-    box-shadow: 0 3px 10px rgba(106, 90, 205, 0.3);
+    box-shadow: 0 4px 12px rgba(106, 90, 205, 0.25);
 }
 .ip-card.multi-selected { 
     border-left: 4px solid var(--accent-color-secondary); 
@@ -403,6 +424,7 @@ body {
     display: flex; 
     flex-direction: column;
     flex-grow: 1; 
+    overflow: hidden; 
 }
 .file-path-display {
     margin-top: 15px;
@@ -506,7 +528,7 @@ body {
 .app-footer {
     background-color: #ffffff;
     color: var(--text-secondary);
-    padding: 10px 15px; /* 调整内边距 */
+    padding: 10px 15px; 
     text-align: right;
     font-size: 0.85em; 
     border-top: 1px solid var(--border-color);
@@ -514,26 +536,26 @@ body {
     min-height: 28px; 
     display: flex; 
     align-items: center; 
-    justify-content: space-between; /* 让关于按钮和状态文本分布在两侧 */
+    justify-content: space-between; 
 }
-.app-footer p.footer-status-container { /* 包裹状态文本的容器 */
+.app-footer p.footer-status-container { 
     margin: 0;
     display: flex;
     align-items: center;
-    justify-content: flex-end; /* 状态文本靠右 */
-    flex-grow: 1; /* 占据剩余空间 */
+    justify-content: flex-end; 
+    flex-grow: 1; 
 }
-.app-footer .button.footer-action-button { /* 关于按钮样式 */
+.app-footer .button.footer-action-button { 
     padding: 5px 10px;
     font-size: 0.8em;
     background-color: transparent;
     color: var(--text-secondary);
-    border: 1px solid transparent; /* 初始透明边框 */
+    border: 1px solid transparent; 
 }
 .app-footer .button.footer-action-button:hover {
     color: var(--accent-color-primary);
-    border-color: var(--accent-color-primary); /* 悬停时显示边框 */
-    background-color: rgba(106, 90, 205, 0.05); /* 非常浅的背景 */
+    border-color: var(--accent-color-primary); 
+    background-color: rgba(106, 90, 205, 0.05); 
 }
 .app-footer .button.footer-action-button i {
     margin-right: 5px;
@@ -542,7 +564,7 @@ body {
 #footer-status-text { 
     font-weight: 500;
     color: var(--text-primary); 
-    margin-left: 5px; /* 与图标的间距 */
+    margin-left: 5px; 
 }
 #footer-status-text.success { color: var(--accent-color-success); }
 #footer-status-text.error { color: var(--accent-color-error); }

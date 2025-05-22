@@ -2,18 +2,19 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>发送状态日志</title>
+    <title>发送日志</title>
+    <link rel="stylesheet" href="./assets/fontawesome/css/all.min.css">
     <style>
         :root {
             --primary-font: 'Roboto', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            --card-bg-color: #ffffff; /* 卡片背景 - 白色 */
-            --text-primary: #333740; /* 主要文字颜色 - 深灰 */
-            --text-secondary: #777e8c; /* 次要文字颜色 - 中灰 */
-            --border-color: #e5e9f2; /* 边框和分隔线颜色 */
-            --accent-color-primary: #6a5acd; /* 主强调色 - 淡紫色 */
-            --accent-color-secondary: #3b82f6; /* 次强调色 - 蓝色 */
-            --accent-color-success: #10b981; /* 成功 - 绿色 */
-            --accent-color-error: #ef4444;   /* 错误 - 红色 */
+            --card-bg-color: #ffffff; 
+            --text-primary: #333740; 
+            --text-secondary: #777e8c; 
+            --border-color: #e5e9f2; 
+            --accent-color-primary: #6a5acd; 
+            --accent-color-secondary: #3b82f6; 
+            --accent-color-success: #10b981; 
+            --accent-color-error: #ef4444;   
             --button-text-light: #ffffff;
             --card-border-radius: 8px; 
         }
@@ -36,14 +37,14 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            background-color: #f9fafb; /* 日志区域背景略有不同 */
+            background-color: #f9fafb; 
         }
         h4 {
             margin-top: 0;
-            margin-bottom: 12px; /* 增加标题和列表间距 */
+            margin-bottom: 12px; 
             color: var(--accent-color-primary);
-            font-size: 1.15em; /* 增大标题 */
-            font-weight: 500; /* 标题字重 */
+            font-size: 1.15em; 
+            font-weight: 500; 
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
             flex-shrink: 0; 
@@ -52,7 +53,7 @@
         }
         h4 i {
             margin-right: 8px;
-            font-size: 1.1em; /* 图标大小 */
+            font-size: 1.1em; 
         }
         ul#log-list-popup {
             list-style-type: none;
@@ -62,7 +63,7 @@
             overflow-y: auto; 
         }
         li {
-            padding: 8px 5px; /* 调整列表项内边距 */
+            padding: 8px 5px; 
             border-bottom: 1px solid #f0f2f5; 
             display: flex;
             justify-content: space-between;
@@ -72,7 +73,7 @@
             transition: background-color 0.2s ease;
         }
         li:hover {
-            background-color: #eef2ff; /* 悬停时浅蓝色背景 */
+            background-color: #eef2ff; 
         }
         li:last-child {
             border-bottom: none;
@@ -80,7 +81,7 @@
         .log-ip {
             font-weight: 500;
             color: var(--text-primary);
-            flex-basis: 50%; /* IP和名称部分占比 */
+            flex-basis: 50%; 
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -91,14 +92,14 @@
             margin-left: auto;
             flex-grow: 1;
             text-align: right;
-            font-size: 0.9em; /* 消息文本稍小 */
+            font-size: 0.9em; 
             display: flex;
             align-items: center;
             justify-content: flex-end;
         }
         .log-message i {
             margin-right: 6px;
-            font-size: 1em; /* 图标大小与文本匹配 */
+            font-size: 1em; 
         }
         .log-status-success, .log-icon-success { color: var(--accent-color-success) !important; }
         .log-status-error, .log-icon-error { color: var(--accent-color-error) !important; }
@@ -107,18 +108,18 @@
         .log-status-success, .log-status-error { font-weight: 500; }
 
         .footer-controls {
-            padding: 12px 15px; /* 调整页脚内边距 */
+            padding: 12px 15px; 
             border-top: 1px solid var(--border-color);
             text-align: right;
             flex-shrink: 0; 
-            background-color: var(--card-bg-color); /* 页脚背景与body一致 */
+            background-color: var(--card-bg-color); 
         }
         .ok-button {
-            padding: 8px 22px; /* 调整按钮大小 */
+            padding: 8px 22px; 
             background-color: var(--accent-color-primary);
             color: var(--button-text-light);
             border: none;
-            border-radius: 6px; /* 按钮圆角 */
+            border-radius: 6px; 
             cursor: pointer;
             font-size: 0.9em;
             font-weight: 500;
@@ -129,21 +130,20 @@
             background-color: #5847b3; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.15);
         }
-        .ok-button:active {
+         .ok-button:active {
             background-color: #4e3ca0;
             box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
         }
-        /* 滚动条样式 */
         ::-webkit-scrollbar { width: 7px; height: 7px; }
-        ::-webkit-scrollbar-track { background: #eef2ff; border-radius: 3px;} /* 轨道颜色 */
-        ::-webkit-scrollbar-thumb { background: #bdc5d8; border-radius: 3px;} /* 滑块颜色 */
+        ::-webkit-scrollbar-track { background: #eef2ff; border-radius: 3px;} 
+        ::-webkit-scrollbar-thumb { background: #bdc5d8; border-radius: 3px;} 
         ::-webkit-scrollbar-thumb:hover { background: #a8b0c3; }
     </style>
-    <link rel="stylesheet" href="./all.min.css">
-</head>
+    </head>
 <body>
     <div class="log-container">
-        <h4><i class="fas fa-list-alt"></i> 发送日志详情</h4> <ul id="log-list-popup"></ul>
+        <h4><i class="fas fa-list-alt"></i> 传送日志详情</h4>
+        <ul id="log-list-popup"></ul>
     </div>
     <div class="footer-controls">
         <button id="ok-button" class="ok-button">确定</button>

@@ -267,10 +267,11 @@ ipcMain.handle('show-open-dialog', async (event, options) => {
         return { canceled: true, filePaths: [] };
     }
     try {
+        console.log("[Main] Handling 'show-open-dialog' for files with options:", options);
         const result = await dialog.showOpenDialog(activeWindow, options);
         return result;
     } catch (error) {
-        console.error("[Main] Error in showOpenDialog:", error);
+        console.error("[Main] Error in showOpenDialog for files:", error);
         return { canceled: true, filePaths: [] };
     }
 });
@@ -318,11 +319,7 @@ ipcMain.handle('process-image-for-sending', async (event, originalFilePath) => {
             console.log('[Main] Original file is BMP. Attempting to copy directly.');
             const imageForValidation = nativeImage.createFromPath(originalFilePath); 
             if (imageForValidation.isEmpty()) {
-                // Even if isEmpty is true, we will still try to copy it, 
-                // as the receiving end might be more tolerant or it's a specific type of BMP
-                // that nativeImage struggles with but is otherwise valid.
-                // The error will be caught by the receiver if it's truly invalid.
-                 console.warn(`[Main] Original BMP at ${originalFilePath} could not be loaded reliably by nativeImage (isEmpty is true). Copying as is.`);
+                console.warn(`[Main] Original BMP at ${originalFilePath} could not be loaded by nativeImage (isEmpty is true). This might indicate an unsupported BMP subformat or corruption.`);
             }
             try {
                 fs.copyFileSync(originalFilePath, tempFilePath);
@@ -425,18 +422,52 @@ ipcMain.handle('check-computer-online', async (event, ip, port = 5000) => {
     });
 });
 
+// 新增：专门用于文件夹选择的 'show-open-directory-dialog'
 ipcMain.handle('show-open-directory-dialog', async (event, options) => {
     const activeWindow = BrowserWindow.getFocusedWindow() || mainWindow;
     if (!activeWindow || activeWindow.isDestroyed()) {
-        console.error("show-open-directory-dialog: No window available to show dialog.");
+        console.error("[Main] show-open-directory-dialog: No window available to show dialog.");
         return { canceled: true, filePaths: [] };
     }
     try {
-        const result = await dialog.showOpenDialog(activeWindow, options);
+        console.log("[Main] Handling 'show-open-directory-dialog' with options:", options);
+        const result = await dialog.showOpenDialog(activeWindow, { ...options, properties: ['openDirectory'] });
         return result;
     } catch (error) {
         console.error("[Main] Error in showOpenDirectoryDialog:", error);
         return { canceled: true, filePaths: [] };
+    }
+});
+
+// 新增：显示保存文件对话框 (用于导出)
+ipcMain.handle('show-save-dialog', async (event, options) => {
+    const activeWindow = BrowserWindow.getFocusedWindow() || mainWindow;
+    if (!activeWindow || activeWindow.isDestroyed()) {
+        console.error("[Main] show-save-dialog: No window available to show dialog.");
+        return { canceled: true, filePath: null };
+    }
+    try {
+        console.log("[Main] Handling 'show-save-dialog' with options:", options);
+        const result = await dialog.showSaveDialog(activeWindow, options);
+        return result; // { canceled: boolean, filePath: string | undefined }
+    } catch (error) {
+        console.error("[Main] Error in showSaveDialog:", error);
+        return { canceled: true, filePath: null, error: error.message };
+    }
+});
+
+// 新增：写入文件内容 (用于导出)
+ipcMain.handle('write-file', async (event, filePath, data) => {
+    if (!filePath) {
+        return { success: false, error: "文件路径无效。" };
+    }
+    try {
+        fs.writeFileSync(filePath, data, 'utf-8');
+        console.log(`[Main] Data written to: ${filePath}`);
+        return { success: true };
+    } catch (error) {
+        console.error(`[Main] Failed to write file ${filePath}:`, error);
+        return { success: false, error: error.message };
     }
 });
 
@@ -446,38 +477,48 @@ function sendSingleImageToIp(imagePathToSend, targetIpForSend, roomNameForLog, i
         const filenameBaseForHeader = imageNameInHeader; 
         let client = new net.Socket();
         let promiseSettled = false;
-        let senderFinishedWriting = false; 
+        let allDataWrittenToSocketBuffer = false; 
 
-        const settlePromise = (fn, data) => {
+        const cleanupAndSettle = (settleFn, data) => {
             if (!promiseSettled) {
                 promiseSettled = true;
-                fn(data);
-                if (client && !client.destroyed) client.destroy();
+                if (client && !client.destroyed) {
+                    console.log(`[${targetIpForSend}] Destroying socket in cleanupAndSettle for ${filenameBaseForHeader}`);
+                    client.destroy();
+                }
                 client = null;
                 if (imagePathToSend && imagePathToSend.includes(app.getPath('temp'))) { 
                     if (data.status !== 'error' || (data.message && !data.message.includes('处理后的图片文件不存在'))) {
                          deleteTempFile(imagePathToSend);
                     }
                 }
+                settleFn(data); 
             }
         };
 
         if (!fs.existsSync(imagePathToSend)) { 
             const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: `处理后的图片文件不存在: ${filenameBaseForHeader}` };
             sendLogToPopup(errData);
-            settlePromise(reject, errData);
+            cleanupAndSettle(reject, errData);
             return;
         }
         
-        client.setTimeout(20000);
+        client.setTimeout(30000); 
 
         client.on('timeout', () => {
             console.error(`[${targetIpForSend}] Socket 连接或发送超时: ${filenameBaseForHeader}`);
             const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: `操作超时` };
             sendLogToPopup(errData);
-            settlePromise(reject, errData);
+            cleanupAndSettle(reject, errData);
         });
 
+        client.on('error', (err) => {
+            console.error(`[${targetIpForSend}] Socket 错误: ${filenameBaseForHeader}`, err);
+            const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: `连接错误: ${err.code || err.message}` };
+            sendLogToPopup(errData);
+            cleanupAndSettle(reject, errData);
+        });
+        
         client.connect(targetPort, targetIpForSend, () => {
             if (promiseSettled) return;
             console.log(`[${targetIpForSend}] 已连接，准备发送: ${filenameBaseForHeader}`);
@@ -485,60 +526,60 @@ function sendSingleImageToIp(imagePathToSend, targetIpForSend, roomNameForLog, i
             
             const filesize = fs.statSync(imagePathToSend).size; 
             const header = `${filenameBaseForHeader}|${filesize}`.padEnd(1024, " ");
-            client.write(header, 'utf-8', () => {
+            
+            client.write(header, 'utf-8', (err) => {
                  if (promiseSettled) return;
+                 if (err) {
+                    console.error(`[${targetIpForSend}] 发送头部失败: ${filenameBaseForHeader}`, err);
+                    const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: `发送头部失败: ${err.message}` };
+                    sendLogToPopup(errData);
+                    cleanupAndSettle(reject, errData);
+                    return;
+                 }
                  sendLogToPopup({ ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'sending', message: '正在发送数据...' });
-            });
+                 
+                 const fileStream = fs.createReadStream(imagePathToSend); 
+                 fileStream.pipe(client, { end: false }); 
 
-            const fileStream = fs.createReadStream(imagePathToSend); 
-            fileStream.on('data', (chunk) => {
-                if (promiseSettled || !client || !client.writable) {
-                    fileStream.destroy(); return;
-                }
-                if (!client.write(chunk)) fileStream.pause();
+                 fileStream.on('end', () => {
+                    if (promiseSettled) return;
+                    console.log(`[${targetIpForSend}] 文件数据已全部通过pipe写入socket: ${filenameBaseForHeader}`);
+                    allDataWrittenToSocketBuffer = true;
+                    if (client && !client.destroyed) {
+                        client.end(() => { 
+                            console.log(`[${targetIpForSend}] client.end() called after file stream 'end' for ${filenameBaseForHeader}`);
+                        }); 
+                    }
+                 });
+                 fileStream.on('error', (streamErr) => {
+                    if (promiseSettled) return;
+                    console.error(`[${targetIpForSend}] 读取文件流失败: ${filenameBaseForHeader}`, streamErr);
+                    const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: `读取文件失败: ${streamErr.message}` };
+                    sendLogToPopup(errData);
+                    cleanupAndSettle(reject, errData);
+                 });
             });
-            client.on('drain', () => { if (fileStream.isPaused()) fileStream.resume(); });
-
-            fileStream.on('end', () => {
-                if (promiseSettled) return;
-                console.log(`[${targetIpForSend}] 文件数据已全部写入socket缓冲区: ${filenameBaseForHeader}`);
-                if (client && !client.destroyed) client.end(); 
-            });
-            fileStream.on('error', (err) => {
-                console.error(`[${targetIpForSend}] 读取文件失败: ${filenameBaseForHeader}`, err);
-                const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: `读取文件失败: ${err.message}` };
-                sendLogToPopup(errData);
-                settlePromise(reject, errData);
-            });
-        });
-
-        client.on('error', (err) => {
-            console.error(`[${targetIpForSend}] Socket 错误: ${filenameBaseForHeader}`, err);
-            const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: `连接错误: ${err.message}` };
-            sendLogToPopup(errData);
-            settlePromise(reject, errData);
         });
         
         client.on('finish', () => { 
-            senderFinishedWriting = true;
-            console.log(`[${targetIpForSend}] Socket 'finish' event: All data written to OS buffer.`);
+            console.log(`[${targetIpForSend}] Socket 'finish' event for ${filenameBaseForHeader}. Data flushed to OS.`);
         });
 
         client.on('close', (hadError) => {
             console.log(`[${targetIpForSend}] Socket 连接已关闭 (hadError: ${hadError}): ${filenameBaseForHeader}`);
-            if (!promiseSettled) {
-                if (hadError) {
-                    const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: '连接因错误而关闭' };
+            if (!promiseSettled) { 
+                if (hadError) { 
+                    const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: `连接因错误而关闭 (${client.errored?.code || '未知错误'})` };
                     sendLogToPopup(errData);
-                    settlePromise(reject, errData);
-                } else if (senderFinishedWriting) {
+                    cleanupAndSettle(reject, errData);
+                } else if (allDataWrittenToSocketBuffer) { 
                     const successData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'success', message: `图片 "${filenameBaseForHeader}" 发送完成` };
                     sendLogToPopup(successData);
-                    settlePromise(resolve, successData);
-                } else {
-                    const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: '连接关闭但发送状态未知' };
+                    cleanupAndSettle(resolve, successData);
+                } else { 
+                    const errData = { ip: targetIpForSend, room: roomNameForLog, image: imageNameInHeader, status: 'error', message: '连接关闭但发送可能未完成' };
                     sendLogToPopup(errData);
-                    settlePromise(reject, errData);
+                    cleanupAndSettle(reject, errData);
                 }
             }
         });

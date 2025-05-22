@@ -163,16 +163,17 @@
             
             <h3><i class="fas fa-list-ol"></i> 目标设备列表管理</h3>
             <ul>
-                <li><strong>加载列表：</strong> 程序启动时会自动从本地（用户数据目录下的 <code>ImageSenderData/computers.json</code>）加载之前保存的设备列表。</li>
-                <li><strong>添加设备：</strong> 点击侧边栏的“<i class="fas fa-plus icon-inline"></i> 添加”按钮，在弹出的对话框中输入设备的名称和IP地址。IP地址必须唯一。</li>
+                <li><strong>加载列表：</strong> 程序启动时会自动从本地（用户数据目录下的 <code>ImageSenderData/computers.json</code>）加载之前保存的设备列表。列表中的顺序也会被保留。</li>
+                <li><strong>添加设备：</strong> 点击侧边栏的“<i class="fas fa-plus icon-inline"></i> 添加”按钮，在弹出的对话框中输入设备的名称和IP地址。IP地址在列表中必须唯一。添加成功后，会自动探测新设备的状态。</li>
                 <li><strong>删除设备：</strong>
                     <ul>
                         <li><strong>单选删除：</strong> 点击列表中的某个设备卡片（卡片会以紫色背景高亮显示为当前选中），然后点击“<i class="fas fa-trash-alt icon-inline"></i> 删除”按钮，在确认对话框中确认后即可删除。</li>
                         <li><strong>多选删除：</strong> 点击设备卡片左侧的复选框 <input type="checkbox" style="pointer-events: none; accent-color: #6a5acd; vertical-align: middle;" checked disabled> 选择一个或多个设备（卡片会有绿色左边框提示），然后点击“<i class="fas fa-trash-alt icon-inline"></i> 删除”按钮进行批量删除。</li>
                     </ul>
                 </li>
-                <li><strong>导入列表：</strong> 点击“<i class="fas fa-file-import icon-inline"></i> 导入”按钮，选择一个文本文件（<code>.txt</code> 或 <code>.csv</code>）。文件格式要求每行一条记录，内容为“设备名称,IP地址”（例如：<code>一楼大厅,192.168.1.10</code>）。程序会自动跳过格式错误或IP地址已存在于当前列表的条目。</li>
-                <li><strong>拖动排序：</strong> 按住列表中的某个设备卡片，可以上下拖动以改变其在列表中的顺序。顺序更改后会自动保存。</li>
+                <li><strong>导入列表：</strong> 点击“<i class="fas fa-file-import icon-inline"></i> 导入”按钮，选择一个文本文件（<code>.txt</code> 或 <code>.csv</code>）。文件格式要求每行一条记录，内容为“设备名称,IP地址”（例如：<code>一楼大厅,192.168.1.10</code>）。程序会自动跳过格式错误或IP地址已存在于当前列表的条目。导入成功后，会自动探测所有设备的状态。</li>
+                <li><strong>导出列表：</strong> 点击“<i class="fas fa-file-export icon-inline"></i> 导出”按钮，选择保存路径和文件名，即可将当前设备列表导出为文本文件，格式与导入文件相同。此功能方便备份和迁移列表。</li>
+                <li><strong>拖动排序：</strong> 按住列表中的某个设备卡片（确保未处于多选模式），可以上下拖动以改变其在列表中的顺序。顺序更改后会自动保存。</li>
                 <li><strong>刷新状态：</strong> 点击“<i class="fas fa-sync-alt icon-inline"></i> 刷新状态”按钮，程序会尝试探测列表中所有设备的在线状态（通过TCP连接默认端口5000）。设备卡片前的圆形指示灯会显示状态：
                     <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #10b981; margin: 0 2px; vertical-align: middle;"></span> 在线 (绿色)，
                     <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #ef4444; margin: 0 2px; vertical-align: middle;"></span> 离线 (红色)，
@@ -183,8 +184,8 @@
             <h3><i class="fas fa-paper-plane"></i> 单独发送图片</h3>
             <ul>
                 <li>首先从左侧“目标设备列表”中**单击选中**一个状态为“在线”的设备。</li>
-                <li>然后点击“<i class="fas fa-file-import icon-inline"></i> 选择图像”按钮，从您的计算机中选择一个图片文件（支持JPG, PNG, BMP格式）。</li>
-                <li>程序会自动将非BMP格式的图片转换为24位BMP格式进行处理。如果文件名包含中文字符，也会被自动替换为基于时间戳的英文/数字组合名称，并确保后缀为 <code>.bmp</code>。</li>
+                <li>然后点击“<i class="fas fa-file-image icon-inline"></i> 选择图像”按钮，从您的计算机中选择一个图片文件（支持JPG, PNG, BMP格式）。</li>
+                <li>程序会自动将非BMP格式的图片转换为标准的24位BMP格式进行处理。如果原始文件名包含中文字符，也会被自动替换为基于时间戳的英文/数字组合名称，并确保最终发送的文件名后缀为 <code>.bmp</code>。</li>
                 <li>图片选定并处理完成后，预览区会显示图片，“开始发送”按钮会变为可用状态。</li>
                 <li>点击“<i class="fas fa-paper-plane icon-inline"></i> 开始发送”按钮即可将图片发送到选定的目标设备。发送详情会在弹出的日志窗口中显示，底部状态栏也会显示最终结果。</li>
                 <li><strong>注意：</strong> 只有当选定的目标设备状态为“在线”时，才能进行发送。</li>
@@ -192,7 +193,7 @@
 
             <h3><i class="fas fa-history"></i> 一键恢复/批量发送自定义图片</h3>
             <ul>
-                <li>点击侧边栏“系统操作”下的“<i class="fas fa-history icon-inline"></i> 一键恢复”按钮。</li>
+                <li>点击侧边栏“批量操作”下的“<i class="fas fa-history icon-inline"></i> 一键恢复”按钮。</li>
                 <li>程序会提示您选择一个包含恢复图片的**文件夹**。</li>
                 <li>该文件夹内的图片需要按照数字顺序命名，例如 <code>1.bmp</code>, <code>2.bmp</code>, <code>3.bmp</code> 等。这些数字将对应左侧“目标设备列表”中设备的**当前排序ID**。例如，列表中的第1个设备将接收文件夹中的 <code>1.bmp</code>，第2个设备接收 <code>2.bmp</code>，以此类推。</li>
                 <li>选择文件夹后，程序会将对应的图片发送到列表中的所有计算机设备（如果设备不在线，会尝试发送但通常会失败，详情见日志）。</li>
@@ -203,6 +204,13 @@
             <ul>
                 <li>程序窗口右上角提供最小化、最大化/还原、关闭按钮。</li>
                 <li>可以通过拖动最顶部的标题栏来移动窗口。</li>
+                <li>“关于”页面和“日志”页面也支持拖动和标准窗口操作（如果其窗口框架可见）。</li>
+            </ul>
+             <h3><i class="fas fa-tools"></i> 其他提示</h3>
+            <ul>
+                <li>所有设备列表信息（名称和IP）保存在用户数据目录下的 <code>ImageSenderData/computers.json</code> 文件中。</li>
+                <li>图片处理时生成的临时文件会自动清理。</li>
+                <li>发送操作的详细日志会显示在弹出的“发送日志详情”窗口，该窗口会在10秒后自动关闭，也可以手动点击“确定”关闭。</li>
             </ul>
         </section>
 

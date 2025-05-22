@@ -17,6 +17,7 @@ const closeBtn = document.getElementById('close-btn');
 const addComputerBtn = document.getElementById('add-computer-btn');
 const deleteComputerBtn = document.getElementById('delete-computer-btn');
 const importComputersBtn = document.getElementById('import-computers-btn');
+const exportComputersBtn = document.getElementById('export-computers-btn'); 
 const refreshStatusBtn = document.getElementById('refresh-status-btn'); 
 const aboutAppBtn = document.getElementById('about-app-btn'); // 获取“关于”按钮
 
@@ -119,7 +120,7 @@ async function saveComputersList() {
         const result = await window.electronAPI.saveComputers(dataToSave);
         if (result.success) {
             console.log('计算机列表已成功保存。');
-            updateFooterStatus('计算机列表已保存。', 'success');
+            // updateFooterStatus('计算机列表已保存。', 'success'); // 保存成功通常不需要特别提示，除非是用户主动操作
         } else {
             console.error('保存计算机列表失败:', result.error);
             updateFooterStatus(`错误: 保存列表失败 - ${result.error}`, 'error');
@@ -147,7 +148,7 @@ function displayComputerList() {
     if (loadingPlaceholder) loadingPlaceholder.style.display = 'none';
 
     if (computers.length === 0) {
-        ipListContainer.innerHTML = '<div class="loading-placeholder">没有计算机信息。请添加或导入。</div>';
+        ipListContainer.innerHTML = '<div class="loading-placeholder">没有设备信息。请添加或导入。</div>';
         if(recoverAllBtn) recoverAllBtn.disabled = true;
         selectedTargetIp = null; 
         selectedComputerName = null;
@@ -665,9 +666,9 @@ async function handleImportComputers() {
 
                 if (tempNewComputers.length > 0) {
                     computers = computers.concat(tempNewComputers); 
-                    await saveComputersList(); // 保存合并后的列表
-                    // 在保存后，重新加载并探测状态，以确保UI与持久化数据一致
-                    await loadAndDisplayComputers(true); // 这会调用 displayComputerList 和 probeAllComputersStatus
+                    displayComputerList(); // **立即更新UI以显示新导入的条目**
+                    await saveComputersList(); // 然后保存
+                    await probeAllComputersStatus(); // 最后探测状态
                 }
                 let message = `成功导入 ${importedCount} 条新计算机信息。`;
                 if (skippedCount > 0) message += ` 跳过 ${skippedCount} 条无效或重复记录。`;
@@ -685,6 +686,57 @@ async function handleImportComputers() {
         console.error("导入计算机列表时发生错误:", error);
         updateFooterStatus(`错误: 导入失败 - ${error.message}`, "error");
         await showCustomAlert(`导入失败: ${error.message}`, "导入错误");
+    }
+}
+
+/**
+ * 处理导出计算机列表到文件的逻辑。
+ */
+async function handleExportComputers() {
+    console.log('导出计算机列表按钮被点击。');
+    if (!window.electronAPI || typeof window.electronAPI.showSaveDialog !== 'function' || typeof window.electronAPI.writeFile !== 'function') {
+        await showCustomAlert("错误: 导出功能所需API不可用。", "功能缺失");
+        updateFooterStatus("错误: 导出功能初始化失败。", "error");
+        return;
+    }
+
+    if (computers.length === 0) {
+        await showCustomAlert("设备列表为空，无需导出。", "操作提示");
+        updateFooterStatus("列表为空，无法导出。", "info");
+        return;
+    }
+
+    try {
+        const result = await window.electronAPI.showSaveDialog({
+            title: '导出设备列表到文件',
+            defaultPath: `banpai-devices-export-${new Date().toISOString().slice(0,10)}.txt`, // 包含日期的默认文件名
+            filters: [
+                { name: '文本文件 (*.txt)', extensions: ['txt'] },
+                { name: 'CSV 文件 (*.csv)', extensions: ['csv'] },
+                { name: '所有文件', extensions: ['*'] }
+            ]
+        });
+
+        if (!result.canceled && result.filePath) {
+            const filePath = result.filePath;
+            const fileContent = computers.map(comp => `${comp.name},${comp.ip}`).join('\n');
+            
+            const writeResult = await window.electronAPI.writeFile(filePath, fileContent);
+
+            if (writeResult.success) {
+                await showCustomAlert(`设备列表已成功导出到: ${filePath}`, "导出成功");
+                updateFooterStatus("设备列表导出成功。", "success");
+            } else {
+                await showCustomAlert(`导出文件失败: ${writeResult.error}`, "导出错误");
+                updateFooterStatus(`导出文件失败: ${writeResult.error}`, "error");
+            }
+        } else {
+            updateFooterStatus("导出操作已取消。", "info");
+        }
+    } catch (error) {
+        console.error("导出设备列表时发生错误:", error);
+        await showCustomAlert(`导出过程中发生未知错误: ${error.message}`, "导出异常");
+        updateFooterStatus(`导出失败: ${error.message}`, "error");
     }
 }
 
@@ -709,21 +761,17 @@ if (modalConfirmBtn) modalConfirmBtn.addEventListener('click', handleAddComputer
 
 if (deleteComputerBtn) deleteComputerBtn.addEventListener('click', handleDeleteComputer);
 if (importComputersBtn) importComputersBtn.addEventListener('click', handleImportComputers);
+if (exportComputersBtn) exportComputersBtn.addEventListener('click', handleExportComputers); 
 if (refreshStatusBtn) refreshStatusBtn.addEventListener('click', probeAllComputersStatus);
-
-if (aboutAppBtn) {
-    aboutAppBtn.addEventListener('click', () => {
-        console.log('“关于”按钮被点击');
-        if (window.electronAPI && typeof window.electronAPI.openAboutWindow === 'function') {
-            window.electronAPI.openAboutWindow();
-        } else {
-            console.error("openAboutWindow API not found on window.electronAPI. Check preload.js");
-            showCustomAlert("无法打开“关于”页面 (API缺失)。", "功能错误");
-        }
-    });
-} else {
-    console.error("“关于”按钮 (aboutAppBtn) 未找到!");
-}
+if (aboutAppBtn) aboutAppBtn.addEventListener('click', () => {
+    console.log('“关于”按钮被点击');
+    if (window.electronAPI && typeof window.electronAPI.openAboutWindow === 'function') {
+        window.electronAPI.openAboutWindow();
+    } else {
+        console.error("openAboutWindow API not found on window.electronAPI. Check preload.js");
+        showCustomAlert("无法打开“关于”页面 (API缺失)。", "功能错误");
+    }
+});
 
 
 if (selectImageBtn) selectImageBtn.addEventListener('click', async () => {
@@ -958,7 +1006,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const requiredIds = [
         'select-image-btn', 'send-btn', 'recover-all-btn', 'image-path-display', 'image-preview', 
         'image-preview-placeholder', 'ip-list-container', 'footer-status-text', 
-        'add-computer-btn', 'delete-computer-btn', 'import-computers-btn', 'refresh-status-btn', 'about-app-btn', 
+        'add-computer-btn', 'delete-computer-btn', 'import-computers-btn', 'export-computers-btn', // 添加 export-computers-btn
+        'refresh-status-btn', 'about-app-btn',
         'add-computer-modal', 'computer-name-input', 'computer-ip-input', 'modal-cancel-btn', 'modal-confirm-btn',
         'alert-modal', 'alert-modal-title', 'alert-modal-message', 'alert-modal-ok-btn',
         'confirm-modal', 'confirm-modal-title', 'confirm-modal-message', 'confirm-modal-cancel-btn', 'confirm-modal-confirm-btn',

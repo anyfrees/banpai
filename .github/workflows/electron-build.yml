@@ -18,16 +18,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # 更新到 v4
+        uses: actions/checkout@v4
 
       - name: Setup Node.js ${{ matrix.node_version }}
-        uses: actions/setup-node@v4 # 更新到 v4
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
-          cache: 'npm' # 缓存npm依赖，加快后续构建
+          cache: 'npm'
 
       - name: Install dependencies (npm)
-        run: npm ci # 使用 npm ci 更快且更可靠地安装依赖
+        run: npm ci
 
       - name: Install app dependencies for electron-builder
         run: npm run postinstall # 运行 package.json 中的 postinstall 脚本
@@ -35,29 +35,39 @@ jobs:
       # macOS 构建特定步骤 (如果需要代码签名和公证)
       # - name: Import Code-Signing Certificates (macOS)
       #   if: matrix.os == 'macos-latest' && secrets.MAC_CERTS_P12_BASE64 != '' && secrets.MAC_CERTS_PASSWORD != ''
-      #   uses: apple-actions/import-codesign-certs@v2 # 这个 action 的最新版本可能也需要检查
+      #   uses: apple-actions/import-codesign-certs@v2
       #   with:
       #     p12-file-base64: ${{ secrets.MAC_CERTS_P12_BASE64 }}
       #     p12-password: ${{ secrets.MAC_CERTS_PASSWORD }}
 
       - name: Build/release Electron app
-        run: npm run dist 
+        shell: bash # 确保在 macOS 和 Linux 上使用 bash
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            npm run dist:mac
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            npm run dist:win
+          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            npm run dist:linux
+          else
+            npm run dist # 作为备用，或者可以报错
+          fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # --- macOS Codesigning and Notarization ---
-          # CSC_LINK: ${{ secrets.MAC_CERTS_P12_BASE64 }} 
-          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }} 
-          # APPLE_ID: ${{ secrets.APPLE_ID }} 
-          # APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }} 
-          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} 
+          # CSC_LINK: ${{ secrets.MAC_CERTS_P12_BASE64 }} # Base64 encoded .p12 file
+          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }} # App-specific password
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # --- Windows Codesigning ---
-          # WIN_CSC_LINK: ${{ secrets.WIN_PFX_FILE_BASE64 }} 
-          # WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_PFX_PASSWORD }} 
+          # WIN_CSC_LINK: ${{ secrets.WIN_PFX_FILE_BASE64 }} # Base64 encoded .pfx file
+          # WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_PFX_PASSWORD }}
 
       - name: Upload Artifacts
         if: success() # 仅在构建成功时上传
-        uses: actions/upload-artifact@v4 # 更新到 v4
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-build-${{ github.ref_name }} 
+          name: ${{ matrix.os }}-build-${{ github.ref_name }}
           path: dist_electron/ # 与 package.json 中的 directories.output 一致
-          # retention-days: 7 
+          # retention-days: 7

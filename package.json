@@ -14,7 +14,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
-    "dist:mac": "electron-builder --mac --x64 --arm64",
+    "dist:mac": "electron-builder --mac --x64 && electron-builder --mac --arm64",
     "dist:linux": "electron-builder --linux",
     "postinstall": "electron-builder install-app-deps"
   },

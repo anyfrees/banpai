@@ -1,6 +1,6 @@
 {
   "name": "banpai-client",
-  "productName": "电子班牌发送客户端",
+  "productName": "BanpaiClient",
   "version": "1.0.2",
   "description": "用于向电子班牌发送图片的桌面客户端程序",
   "main": "main.js",
@@ -32,7 +32,7 @@
   },
   "build": {
     "appId": "com.0vk.banpai.client",
-    "productName": "电子班牌发送客户端",
+    "productName": "BanpaiClient",
     "copyright": "Copyright © 2024 Cheng Kai",
     "asar": true,
     "directories": {
@@ -114,7 +114,7 @@
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "电子班牌发送客户端",
-      "uninstallDisplayName": "${productName} (版本 ${version})",
+      "uninstallDisplayName": "电子班牌发送客户端 (版本 ${version})",
       "license": "LICENSE.txt"
     },
     "dmg": {

@@ -1,7 +1,7 @@
 {
   "name": "banpai-client",
   "productName": "电子班牌发送客户端",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "用于向电子班牌发送图片的桌面客户端程序",
   "main": "main.js",
   "author": {
@@ -28,10 +28,10 @@
   "license": "ISC",
   "devDependencies": {
     "electron": "^29.1.5",
-    "electron-builder": "^24.9.1"
+    "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.0vk.banpai",
+    "appId": "com.0vk.banpai.client",
     "productName": "电子班牌发送客户端",
     "copyright": "Copyright © 2024 Cheng Kai",
     "asar": true,
@@ -101,8 +101,10 @@
       "category": "Utility",
       "desktop": {
         "Name": "电子班牌发送客户端",
+        "Icon": "banpai-client",
         "Comment": "用于向电子班牌发送图片的桌面客户端程序",
-        "Keywords": "image;sender;banpai;"
+        "Keywords": "image;sender;banpai;",
+        "StartupWMClass": "com.0vk.banpai.client"
       }
     },
     "nsis": {
